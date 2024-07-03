@@ -36,6 +36,29 @@ function changeGreeting() {
 
 setInterval(changeGreeting, 3000); // Change every 3 seconds
 
+document.addEventListener("DOMContentLoaded", function () {
+  const socialBar = document.getElementById("socialBar");
+  let lastScrollTop = 0;
+
+  window.addEventListener(
+    "scroll",
+    function () {
+      let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+      if (scrollTop > lastScrollTop) {
+        // Scroll down
+        socialBar.classList.add("hidden");
+      } else {
+        // Scroll up
+        socialBar.classList.remove("hidden");
+      }
+
+      lastScrollTop = scrollTop <= 0 ? 0 : scrollTop; // For Mobile or negative scrolling
+    },
+    false
+  );
+});
+
 window.addEventListener("scroll", () => {
   const scrollPosition = window.scrollY;
   const windowHeight = window.innerHeight;
@@ -50,6 +73,18 @@ window.addEventListener("scroll", () => {
     leftLine.style.transform = "translateX(0)";
     rightLine.style.transform = "translateX(0)";
   }
+
+  let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+  if (scrollTop > lastScrollTop) {
+    // Scroll down
+    socialBar.classList.add("hidden");
+  } else {
+    // Scroll up
+    socialBar.classList.remove("hidden");
+  }
+
+  lastScrollTop = scrollTop <= 0 ? 0 : scrollTop; // For Mobile or negative scrolling
 });
 
 (function ($) {

@@ -1827,6 +1827,14 @@ input, select, textarea {
 
 /* Header */
 
+ #socialBar {
+    transition: transform 0.3s ease-in-out;
+  }
+
+  #socialBar.hidden {
+    transform: translateY(-200%);
+  }
+
 	#header {
 		position: fixed;
 		z-index: 10000;
