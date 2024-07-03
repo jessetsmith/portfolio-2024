@@ -2305,6 +2305,10 @@ input, select, textarea {
     z-index: -1;
 }
 
+#arrowGap {
+	width: 50px;
+}
+
 @media screen and (max-width: 1200px) {
 	#bg-video {
 		height: 120%;
@@ -2353,6 +2357,10 @@ input, select, textarea {
 }
 
 @media screen and (max-width: 700px) {
+	
+	#flexGridBox.box {
+		margin-left: -15px;
+	}
 	#one > #bg-video {
 		
 		left:100%;
@@ -2361,11 +2369,17 @@ input, select, textarea {
 }
 
 @media screen and (max-width: 600px) {
+		#one > #bg-video {
+				
+				left:120%;
 
+			}
 		#two {
 			padding-top: 350px;
 		}
-
+	#arrowGap {
+			width: 5px;
+		}
 		#hero-video {
 			height: 120%;
 			top:40%;
@@ -2379,12 +2393,17 @@ input, select, textarea {
 	#flexGridBox.box {
 		margin-left: -50px;
 		padding: 10px;
+		font-size: 15px;
 	}
 
 }
 
 @media screen and (max-width: 500px) {
+#one > #bg-video {
+		
+		left:150%;
 
+	}
 
 		#hero-video {
 			height: 120%;
@@ -2398,7 +2417,11 @@ input, select, textarea {
 
 @media screen and (max-width: 400px) {
 
+		#one > #bg-video {
+		
+		left:170%;
 
+	}
 		#hero-video {
 			left: 15%;
 			width: 170%;
