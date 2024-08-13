@@ -4,38 +4,6 @@
 	License: pixelarity.com/license
 */
 
-const greetings = [
-  "Hello.", // English
-  "Hola.", // Spanish
-  "Bonjour.", // French
-  "Hallo.", // German
-  "Ciao.", // Italian
-  "こんにちは。", // Japanese
-  "안녕하세요.", // Korean
-  "你好。", // Chinese
-  "Привет.", // Russian
-  "Olá.", // Portuguese
-  "Hej.", // Swedish (Scandinavian)
-  "Hei.", // Norwegian
-  "Salve.", // Latin
-  "Merhaba.", // Turkish
-  "Γειά σου.", // Greek
-  "שלום.", // Hebrew
-  "مرحبا.", // Arabic
-  "नमस्ते।", // Hindi
-  "สวัสดี.", // Thai
-  "Xin chào.", // Vietnamese
-];
-
-function changeGreeting() {
-  const greetingElement = document.getElementById("greeting");
-  const randomGreeting =
-    greetings[Math.floor(Math.random() * greetings.length)];
-  greetingElement.textContent = randomGreeting;
-}
-
-setInterval(changeGreeting, 3000); // Change every 3 seconds
-
 document.addEventListener("DOMContentLoaded", function () {
   const socialBar = document.getElementById("socialBar");
   let lastScrollTop = 0;
@@ -109,6 +77,42 @@ window.addEventListener("scroll", () => {
       $body.removeClass("is-preload");
     }, 100);
   });
+
+  //Greeting cycler
+
+  const greetings = [
+    "Hello.", // English
+    "Hola.", // Spanish
+    "Bonjour.", // French
+    "Hallo.", // German
+    "Ciao.", // Italian
+    "こんにちは。", // Japanese
+    "안녕하세요.", // Korean
+    "你好。", // Chinese
+    "Привет.", // Russian
+    "Olá.", // Portuguese
+    "Hej.", // Swedish (Scandinavian)
+    "Hei.", // Norwegian
+    "Salve.", // Latin
+    "Merhaba.", // Turkish
+    "Γειά σου.", // Greek
+    "שלום.", // Hebrew
+    "مرحبا.", // Arabic
+    "नमस्ते।", // Hindi
+    "สวัสดี.", // Thai
+    "Xin chào.", // Vietnamese
+  ];
+
+  function changeGreeting() {
+    setTimeout(() => {
+      const greetingElement = document.getElementById("greeting");
+      const randomGreeting =
+        greetings[Math.floor(Math.random() * greetings.length)];
+      greetingElement.textContent = randomGreeting;
+    }, 3000);
+  }
+
+  setInterval(changeGreeting, 3000); // Change every 3 seconds
 
   // Touch mode.
   if (browser.mobile) $body.addClass("is-touch");
