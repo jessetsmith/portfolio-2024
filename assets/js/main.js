@@ -104,12 +104,14 @@ window.addEventListener("scroll", () => {
   ];
 
   function changeGreeting() {
-    setTimeout(() => {
-      const greetingElement = document.getElementById("greeting");
-      const randomGreeting =
-        greetings[Math.floor(Math.random() * greetings.length)];
-      greetingElement.textContent = randomGreeting;
-    }, 3000);
+    if (!$("body").hasClass("is-preload")) {
+      setTimeout(() => {
+        const greetingElement = document.getElementById("greeting");
+        const randomGreeting =
+          greetings[Math.floor(Math.random() * greetings.length)];
+        greetingElement.textContent = randomGreeting;
+      }, 3000);
+    }
   }
 
   setInterval(changeGreeting, 3000); // Change every 3 seconds
