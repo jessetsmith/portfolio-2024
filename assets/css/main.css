@@ -1445,6 +1445,7 @@ input, select, textarea {
 			width: 50%;
 			position: relative;
 			opacity: 1.0;
+			cursor: pointer;
 		}
 
 			.gallery article .image {
