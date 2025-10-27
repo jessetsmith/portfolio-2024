@@ -335,66 +335,134 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 });
-
 document.addEventListener("DOMContentLoaded", () => {
-  const section = document.querySelector("#two");
-  const video = document.querySelector("#hero-video");
+  const section = document.getElementById("two");
+  const video = document.getElementById("hero-video");
   if (!section || !video) return;
 
-  // Ensure video is paused initially
-  try {
-    video.pause();
-  } catch (_) {}
+  // Respect reduced motion
+  const prefersReducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  ).matches;
 
-  // Helper to play/pause safely
-  const ensurePlayState = (shouldPlay) => {
-    if (shouldPlay) {
-      if (video.paused) {
-        const p = video.play();
-        if (p && typeof p.catch === "function") {
-          p.catch(() => {
-            /* ignore autoplay rejections; video is muted */
-          });
-        }
+  // Always ensure muted & inline for iOS/Safari
+  video.muted = true;
+  video.setAttribute("playsinline", "");
+  video.setAttribute("webkit-playsinline", "");
+
+  // Utility: compute how much of the section's height is visible (0..1)
+  const sectionVisibilityRatio = () => {
+    const rect = section.getBoundingClientRect();
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+
+    const visibleTop = Math.max(0, Math.min(vh, vh - Math.max(0, -rect.top)));
+    const visibleBottom = Math.max(0, Math.min(vh, rect.bottom));
+    const visibleHeight = Math.max(
+      0,
+      visibleBottom - Math.max(0, rect.top < 0 ? 0 : rect.top)
+    );
+
+    const sectionHeight = Math.max(1, rect.height); // avoid divide-by-zero
+    return Math.max(0, Math.min(1, visibleHeight / sectionHeight));
+  };
+
+  let lastRatio = 0;
+
+  const shouldPlay = () =>
+    !prefersReducedMotion &&
+    !document.hidden &&
+    sectionVisibilityRatio() >= 0.5;
+
+  const tryPlay = () => {
+    if (!shouldPlay()) return;
+    if (!video.paused) return;
+    const p = video.play();
+    if (p && typeof p.catch === "function") {
+      p.catch(() => {
+        // Safari/iOS may require a user gesture on first attempt.
+        // Attach a one-time handler to retry as soon as the user interacts.
+        const once = () => {
+          document.removeEventListener("touchstart", once, true);
+          document.removeEventListener("click", once, true);
+          document.removeEventListener("keydown", once, true);
+          // Try again (now with a gesture)
+          if (shouldPlay()) video.play().catch(() => {});
+        };
+        document.addEventListener("touchstart", once, true);
+        document.addEventListener("click", once, true);
+        document.addEventListener("keydown", once, true);
+      });
+    }
+  };
+
+  const ensurePlayState = () => {
+    const play = shouldPlay();
+    if (play) {
+      // Some Safari builds only succeed after metadata/canplay is ready
+      if (video.readyState >= 2) {
+        tryPlay();
+      } else {
+        const onReady = () => {
+          video.removeEventListener("canplay", onReady);
+          tryPlay();
+        };
+        video.addEventListener("canplay", onReady);
+        // Kick the pipeline: touching currentTime nudges iOS to finalize metadata
+        try {
+          if (video.currentTime === 0) video.currentTime = 0.001;
+        } catch (_) {}
+        video.load(); // harmless if already loaded; ensures metadata request
       }
     } else {
       if (!video.paused) video.pause();
     }
   };
 
-  // Pause video when tab is hidden; resume (subject to visibility threshold) when visible
-  const handleVisibility = () => {
-    if (document.hidden) {
-      ensurePlayState(false);
+  // IntersectionObserver (primary signal)
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.target !== section) return;
+          lastRatio = entry.intersectionRatio || 0;
+          ensurePlayState();
+        });
+      },
+      { threshold: [0, 0.25, 0.5, 0.75, 1] }
+    );
+    io.observe(section);
+  }
+
+  // Fallback/poller for Safari quirks where IO may be throttled or late
+  const onViewportChange = () => {
+    const r = sectionVisibilityRatio();
+    if (Math.abs(r - lastRatio) > 0.02) {
+      lastRatio = r;
+      ensurePlayState();
     } else {
-      // Re-evaluate intersection immediately on visibility return
-      if (lastRatio >= 0.5) ensurePlayState(true);
+      // Even if ratio didn't change much, ensure state on scrolls (Safari fix)
+      ensurePlayState();
     }
   };
-  document.addEventListener("visibilitychange", handleVisibility);
 
-  let lastRatio = 0;
-
-  // Play only when >= 50% of the section is visible
-  const io = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.target !== section) return;
-        lastRatio = entry.intersectionRatio;
-        if (entry.intersectionRatio >= 0.5) {
-          ensurePlayState(true);
-        } else {
-          ensurePlayState(false);
-        }
-      });
-    },
-    {
-      root: null,
-      threshold: [0, 0.25, 0.5, 0.75, 1],
-    }
+  ["scroll", "resize", "orientationchange"].forEach((evt) =>
+    window.addEventListener(evt, onViewportChange, { passive: true })
   );
 
-  io.observe(section);
+  // Page/tab visibility handling
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      if (!video.paused) video.pause();
+    } else {
+      ensurePlayState();
+    }
+  });
 
-  // If user jumps directly to #two on load, IO will still fire an initial entry.
+  // iOS Safari can fire pagehide on app-switch; pause to be safe
+  window.addEventListener("pagehide", () => {
+    if (!video.paused) video.pause();
+  });
+
+  // First evaluation (in case user lands mid-page or navigates via anchor)
+  ensurePlayState();
 });
