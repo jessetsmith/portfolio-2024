@@ -304,3 +304,97 @@ window.addEventListener("scroll", () => {
       $window.trigger("resize");
     });
 })(jQuery);
+
+document.addEventListener("DOMContentLoaded", function () {
+  // Lazy-load animated GIFs when near the viewport
+  const lazyGifs = document.querySelectorAll("img.lazy-gif[data-src]");
+
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver(
+      (entries, observer) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            img.src = img.dataset.src;
+            img.removeAttribute("data-src");
+            img.classList.remove("lazy-gif");
+            observer.unobserve(img);
+          }
+        });
+      },
+      { rootMargin: "200px 0px", threshold: 0.01 }
+    );
+
+    lazyGifs.forEach((img) => io.observe(img));
+  } else {
+    // Fallback: just load them
+    lazyGifs.forEach((img) => {
+      img.src = img.dataset.src;
+      img.removeAttribute("data-src");
+      img.classList.remove("lazy-gif");
+    });
+  }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const section = document.querySelector("#two");
+  const video = document.querySelector("#hero-video");
+  if (!section || !video) return;
+
+  // Ensure video is paused initially
+  try {
+    video.pause();
+  } catch (_) {}
+
+  // Helper to play/pause safely
+  const ensurePlayState = (shouldPlay) => {
+    if (shouldPlay) {
+      if (video.paused) {
+        const p = video.play();
+        if (p && typeof p.catch === "function") {
+          p.catch(() => {
+            /* ignore autoplay rejections; video is muted */
+          });
+        }
+      }
+    } else {
+      if (!video.paused) video.pause();
+    }
+  };
+
+  // Pause video when tab is hidden; resume (subject to visibility threshold) when visible
+  const handleVisibility = () => {
+    if (document.hidden) {
+      ensurePlayState(false);
+    } else {
+      // Re-evaluate intersection immediately on visibility return
+      if (lastRatio >= 0.5) ensurePlayState(true);
+    }
+  };
+  document.addEventListener("visibilitychange", handleVisibility);
+
+  let lastRatio = 0;
+
+  // Play only when >= 50% of the section is visible
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.target !== section) return;
+        lastRatio = entry.intersectionRatio;
+        if (entry.intersectionRatio >= 0.5) {
+          ensurePlayState(true);
+        } else {
+          ensurePlayState(false);
+        }
+      });
+    },
+    {
+      root: null,
+      threshold: [0, 0.25, 0.5, 0.75, 1],
+    }
+  );
+
+  io.observe(section);
+
+  // If user jumps directly to #two on load, IO will still fire an initial entry.
+});
