@@ -590,6 +590,7 @@ input, select, textarea {
 		-ms-transition: color 0.2s ease-in-out;
 		transition: color 0.2s ease-in-out;
 		color: #98c593;
+		cursor: pointer;
 	}
 
 	sub {
@@ -1451,6 +1452,7 @@ input, select, textarea {
 			.gallery article .image {
 				margin: 0;
 				display: block;
+				cursor: pointer;
 			}
 
 			.gallery article:nth-last-child(1n) {
